@@ -1,0 +1,97 @@
+@model List<AG1.Models.Produit>
+@{ ViewData["Title"] = "Produits"; }
+
+<div class="filters-bar">
+    <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <input type="text" name="search" value="@ViewBag.Search" placeholder="🔍 Rechercher (nom, référence)…" style="min-width:240px">
+        <select name="categorieId">
+            <option value="">— Toutes catégories —</option>
+            @foreach (var c in (List<AG1.Models.Categorie>)ViewBag.Categories)
+            {
+                if (ViewBag.CategorieId != null && ViewBag.CategorieId.ToString() == c.Id.ToString())
+                {
+                    <option value="@c.Id" selected>@c.Nom</option>
+                }
+                else
+                {
+                    <option value="@c.Id">@c.Nom</option>
+                }
+            }
+        </select>
+        <select name="statut">
+            <option value="">— Tous statuts —</option>
+            @if (ViewBag.Statut == "ok") { <option value="ok" selected>Stock OK</option> } else { <option value="ok">Stock OK</option> }
+            @if (ViewBag.Statut == "faible") { <option value="faible" selected>Stock faible</option> } else { <option value="faible">Stock faible</option> }
+            @if (ViewBag.Statut == "rupture") { <option value="rupture" selected>Rupture</option> } else { <option value="rupture">Rupture</option> }
+        </select>
+        <button type="submit" class="btn btn-secondary">Filtrer</button>
+        <a href="/Products" class="btn btn-secondary">Réinitialiser</a>
+    </form>
+    @if (User.IsInRole("manager") || User.IsInRole("admin"))
+    {
+        <a href="/Products/Create" class="btn btn-primary" style="margin-left:auto">+ Nouveau produit</a>
+    }
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">@Model.Count produit@(Model.Count > 1 ? "s" : "")</span>
+    </div>
+    <div class="card-body">
+        @if (!Model.Any())
+        {
+            <p style="padding:40px;text-align:center;color:var(--text-muted)">Aucun produit trouvé.</p>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Référence</th>
+                        <th>Nom</th>
+                        <th>Catégorie</th>
+                        <th>Prix vente</th>
+                        <th>Prix achat</th>
+                        <th>Stock</th>
+                        <th>Statut</th>
+                        <th>Actif</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr>
+                            <td style="font-family:'Space Mono',monospace;font-size:0.78rem;color:var(--text-muted)">@p.Reference</td>
+                            <td><a href="/Products/Details/@p.Id" style="color:var(--blue);font-weight:500">@p.Nom</a></td>
+                            <td style="color:var(--text-muted)">@(p.CategorieNom ?? "—")</td>
+                            <td style="font-family:'Space Mono',monospace">@p.Prix.ToString("N2") €</td>
+                            <td style="font-family:'Space Mono',monospace;color:var(--text-muted)">@p.PrixAchat.ToString("N2") €</td>
+                            <td style="font-family:'Space Mono',monospace;font-weight:700">@p.Stock</td>
+                            <td><span class="badge badge-@p.StatutStock">@p.StatutStock</span></td>
+                            <td>
+                                <span class="badge @(p.Actif ? "badge-ok" : "badge-rupture")">@(p.Actif ? "Oui" : "Non")</span>
+                            </td>
+                            <td>
+                                <div style="display:flex;gap:6px">
+                                    <a href="/Products/Details/@p.Id" class="btn btn-secondary btn-sm">Voir</a>
+                                    @if (User.IsInRole("manager") || User.IsInRole("admin"))
+                                    {
+                                        <a href="/Products/Edit/@p.Id" class="btn btn-secondary btn-sm">✏</a>
+                                        <form asp-action="Toggle" asp-controller="Products" method="post" style="display:inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@p.Id">
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                @(p.Actif ? "Désactiver" : "Activer")
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

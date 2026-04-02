@@ -1,0 +1,58 @@
+@* AG1/Views/Products/Create.cshtml *@
+@model AG1.Models.ProduitFormViewModel
+@{ ViewData["Title"] = "Nouveau produit"; }
+
+<a href="/Products" class="btn btn-secondary" style="margin-bottom:24px">← Retour</a>
+
+<div class="form-card" style="max-width:760px">
+    <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:24px">Créer un nouveau produit</h2>
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div class="form-grid">
+            <div class="form-group form-full">
+                <label>Nom du produit *</label>
+                <input asp-for="Produit.Nom" required placeholder="Ex: Smartphone Pro X">
+            </div>
+            <div class="form-group">
+                <label>Référence</label>
+                <input asp-for="Produit.Reference" placeholder="Ex: SPX-001">
+            </div>
+            <div class="form-group">
+                <label>Catégorie</label>
+                <select asp-for="Produit.CategorieId">
+                    <option value="">— Aucune —</option>
+                    @foreach (var c in Model.Categories)
+                    {<option value="@c.Id">@c.Nom</option>}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Prix de vente (€) *</label>
+                <input asp-for="Produit.Prix" type="number" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+                <label>Prix d'achat (€)</label>
+                <input asp-for="Produit.PrixAchat" type="number" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+                <label>Stock initial</label>
+                <input asp-for="Produit.Stock" type="number" min="0">
+            </div>
+            <div class="form-group">
+                <label>Stock minimum (alerte)</label>
+                <input asp-for="Produit.StockMin" type="number" min="0">
+            </div>
+            <div class="form-group form-full">
+                <label>URL image</label>
+                <input asp-for="Produit.ImageUrl" type="url" placeholder="https://…">
+            </div>
+            <div class="form-group form-full">
+                <label>Description</label>
+                <textarea asp-for="Produit.Description" placeholder="Description du produit…"></textarea>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">✓ Créer le produit</button>
+            <a href="/Products" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>

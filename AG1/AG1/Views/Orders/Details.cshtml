@@ -1,0 +1,160 @@
+@model AG1.Models.Commande
+@{ ViewData["Title"] = $"Commande #{Model.Id}"; }
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+    <a href="/Orders" class="btn btn-secondary">← Retour</a>
+    @{ var statutCss = Model.Statut.Replace("_", "-"); }
+    <span class="badge badge-@statutCss" style="font-size:0.9rem;padding:6px 16px">@Model.Statut.Replace("_", " ")</span>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 320px;gap:24px">
+    <!-- Détails commande -->
+    <div>
+        <div class="card" style="margin-bottom:20px">
+            <div class="card-header"><span class="card-title">Articles commandés</span></div>
+            <div class="card-body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th>Qté</th>
+                            <th>Prix unitaire</th>
+                            <th>Sous-total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ligne in Model.Lignes)
+                        {
+                            <tr>
+                                <td>
+                                    <a href="/Products/Details/@ligne.ProduitId" style="color:var(--blue)">@ligne.ProduitNom</a>
+                                </td>
+                                <td style="font-family:'Space Mono',monospace">×@ligne.Quantite</td>
+                                <td style="font-family:'Space Mono',monospace;color:var(--text-muted)">@ligne.PrixUnit.ToString("N2") €</td>
+                                <td style="font-family:'Space Mono',monospace;font-weight:700">@ligne.SousTotal.ToString("N2") €</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <div style="text-align:right;padding:16px;border-top:1px solid var(--border);font-family:'Space Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--green)">
+                    Total : @Model.Total.ToString("N2") €
+                </div>
+            </div>
+        </div>
+
+        <!-- Infos livraison -->
+        <div class="card">
+            <div class="card-header"><span class="card-title">Informations de livraison</span></div>
+            <div class="card-body" style="padding:20px">
+                <div class="detail-info">
+                    <div class="info-item">
+                        <div class="info-label">Client</div>
+                        <div class="info-value">@Model.ClientNom</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Adresse</div>
+                        <div class="info-value">@(Model.AdresseLivraison ?? "—")</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Ville</div>
+                        <div class="info-value">@(Model.CodePostalLivraison ?? "") @(Model.VilleLivraison ?? "")</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Date commande</div>
+                        <div class="info-value">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                    </div>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.Notes))
+                {
+                    <div style="margin-top:16px;padding:12px;background:var(--bg3);border-radius:var(--radius);color:var(--text-muted)">
+                        <strong>Notes :</strong> @Model.Notes
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel gestion statut -->
+    <div>
+        <div class="card">
+            <div class="card-header"><span class="card-title">Gérer la commande</span></div>
+            <div class="card-body" style="padding:20px">
+                <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:16px">
+                    Traité par : <strong>@(Model.VendeurNom ?? "Non assigné")</strong>
+                </p>
+                <form asp-action="UpdateStatut" asp-controller="Orders" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id">
+                    <div class="form-group" style="margin-bottom:12px">
+                        <label>Nouveau statut</label>
+                        <select name="statut">
+                            @if (Model.Statut == "en_attente")
+                            {
+                                <option value="en_attente" selected>En attente</option>
+                            }
+                            else
+                            {
+                                <option value="en_attente">En attente</option>
+                            }
+                            @if (Model.Statut == "confirmee")
+                            {
+                                <option value="confirmee" selected>Confirmée</option>
+                            }
+                            else
+                            {
+                                <option value="confirmee">Confirmée</option>
+                            }
+                            @if (Model.Statut == "expediee")
+                            {
+                                <option value="expediee" selected>Expédiée ⚠ décrémente stock</option>
+                            }
+                            else
+                            {
+                                <option value="expediee">Expédiée ⚠ décrémente stock</option>
+                            }
+                            @if (Model.Statut == "livree")
+                            {
+                                <option value="livree" selected>Livrée</option>
+                            }
+                            else
+                            {
+                                <option value="livree">Livrée</option>
+                            }
+                            @if (Model.Statut == "annulee")
+                            {
+                                <option value="annulee" selected>Annulée</option>
+                            }
+                            else
+                            {
+                                <option value="annulee">Annulée</option>
+                            }
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%">Mettre à jour</button>
+                </form>
+
+                <!-- Flux visuel du statut -->
+                <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+                    <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:8px">FLUX DU STATUT</div>
+                    @{
+                        var flux = new[] { "en_attente", "confirmee", "expediee", "livree" };
+                        var idx  = Array.IndexOf(flux, Model.Statut);
+                    }
+                    @for (int i = 0; i < flux.Length; i++)
+                    {
+                        var couleur = i <= idx ? "var(--green)" : "var(--bg3)";
+                        var texte   = i == idx ? "var(--text)"  : "var(--text-muted)";
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:0.82rem">
+                            <div style="width:8px;height:8px;border-radius:50%;background:@couleur;flex-shrink:0"></div>
+                            <span style="color:@texte">@flux[i].Replace("_", " ")</span>
+                        </div>
+                        if (i < flux.Length - 1)
+                        {
+                            <div style="width:1px;height:10px;background:var(--border);margin-left:3px;margin-bottom:6px"></div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

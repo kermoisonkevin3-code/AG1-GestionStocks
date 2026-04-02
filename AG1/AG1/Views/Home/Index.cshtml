@@ -1,0 +1,102 @@
+@model AG1.Models.DashboardViewModel
+@{ ViewData["Title"] = "Dashboard"; }
+
+<!-- STATS -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Produits actifs</div>
+        <div class="stat-value blue">@Model.TotalProduits</div>
+        <div class="stat-delta">références en catalogue</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Stock faible <span class="badge bg-warning text-dark ms-1">⚠</span></div>
+        <div class="stat-value yellow">@Model.ProduitsStockFaible</div>
+        <div class="stat-delta">produits sous le seuil</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Ruptures de stock <span class="badge bg-danger ms-1">!</span></div>
+        <div class="stat-value red">@Model.ProduitsRupture</div>
+        <div class="stat-delta">produits épuisés</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Commandes en attente <span class="badge bg-warning text-dark ms-1">@Model.CommandesEnAttente</span></div>
+        <div class="stat-value yellow">@Model.CommandesEnAttente</div>
+        <div class="stat-delta">à traiter</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Commandes aujourd'hui</div>
+        <div class="stat-value green">@Model.CommandesAujourdhui</div>
+        <div class="stat-delta">reçues ce jour</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">CA 30 derniers jours</div>
+        <div class="stat-value green">@Model.ChiffreAffaires30j.ToString("N0") €</div>
+        <div class="stat-delta">chiffre d'affaires</div>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px">
+    <!-- Alertes stock -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">⚠ Alertes stock</span>
+            <a href="/Products?statut=faible" class="btn btn-secondary btn-sm">Voir tout</a>
+        </div>
+        <div class="card-body">
+            @if (!Model.ProduitsAlerte.Any())
+            {
+                <p style="padding:20px;color:var(--text-muted);text-align:center">Aucune alerte 🎉</p>
+            }
+            else
+            {
+            <table>
+                <thead><tr><th>Produit</th><th>Ref.</th><th>Stock</th><th>Min</th></tr></thead>
+                <tbody>
+                @foreach (var p in Model.ProduitsAlerte)
+                {
+                    <tr>
+                        <td><a href="/Products/Details/@p.Id" style="color:var(--blue)">@p.Nom</a></td>
+                        <td style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--text-muted)">@p.Reference</td>
+                        <td>
+                            <span class="badge badge-@p.StatutStock">@p.Stock</span>
+                        </td>
+                        <td style="color:var(--text-muted)">@p.StockMin</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            }
+        </div>
+    </div>
+
+    <!-- Dernières commandes -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">🧾 Dernières commandes</span>
+            <a href="/Orders" class="btn btn-secondary btn-sm">Voir tout</a>
+        </div>
+        <div class="card-body">
+            @if (!Model.DernieresCommandes.Any())
+            {
+                <p style="padding:20px;color:var(--text-muted);text-align:center">Aucune commande</p>
+            }
+            else
+            {
+            <table>
+                <thead><tr><th>#</th><th>Client</th><th>Total</th><th>Statut</th></tr></thead>
+                <tbody>
+                @foreach (var c in Model.DernieresCommandes)
+                {
+                    <tr>
+                        <td><a href="/Orders/Details/@c.Id" style="color:var(--blue);font-family:'Space Mono',monospace">#@c.Id</a></td>
+                        <td>@c.ClientNom</td>
+                        <td style="font-family:'Space Mono',monospace">@c.Total.ToString("N2") €</td>
+                        <td><span class="badge badge-@c.Statut.Replace("_","-")">@c.Statut.Replace("_"," ")</span></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            }
+        </div>
+    </div>
+</div>

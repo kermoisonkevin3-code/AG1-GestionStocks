@@ -1,0 +1,41 @@
+@model List<AG1.Models.Client>
+@{ ViewData["Title"] = "Clients E1"; }
+
+<div class="filters-bar">
+    <form method="get" style="display:flex;gap:10px;align-items:center">
+        <input type="text" name="search" value="@ViewBag.Search" placeholder="🔍 Nom, email…" style="min-width:240px">
+        <button type="submit" class="btn btn-secondary">Rechercher</button>
+        <a href="/Orders/Clients" class="btn btn-secondary">Réinitialiser</a>
+    </form>
+    <span style="color:var(--text-muted);font-size:0.82rem;margin-left:auto">@Model.Count client@(Model.Count>1?"s":"")</span>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        @if (!Model.Any())
+        {
+            <p style="padding:40px;text-align:center;color:var(--text-muted)">Aucun client trouvé.</p>
+        }
+        else
+        {
+        <table>
+            <thead>
+                <tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>Ville</th><th>Actif</th><th>Inscrit le</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td><strong>@c.NomComplet</strong></td>
+                    <td style="color:var(--text-muted)">@c.Email</td>
+                    <td style="color:var(--text-muted)">@(c.Telephone ?? "—")</td>
+                    <td style="color:var(--text-muted)">@(c.Ville ?? "—")</td>
+                    <td><span class="badge @(c.Actif?"badge-ok":"badge-rupture")">@(c.Actif?"Actif":"Inactif")</span></td>
+                    <td style="font-size:0.78rem;color:var(--text-muted)">@c.CreatedAt.ToString("dd/MM/yyyy")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        }
+    </div>
+</div>

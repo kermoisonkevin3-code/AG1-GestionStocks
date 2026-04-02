@@ -1,0 +1,78 @@
+@model AG1.Models.ProduitFormViewModel
+@{ ViewData["Title"] = "Modifier · " + Model.Produit.Nom; }
+
+<a href="/Products/Details/@Model.Produit.Id" class="btn btn-secondary" style="margin-bottom:24px">← Retour</a>
+
+<div class="form-card" style="max-width:760px">
+    <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:24px">Modifier : @Model.Produit.Nom</h2>
+    <form asp-action="Edit" method="post">
+        @Html.AntiForgeryToken()
+        <input asp-for="Produit.Id" type="hidden">
+        <div class="form-grid">
+            <div class="form-group form-full">
+                <label>Nom du produit *</label>
+                <input asp-for="Produit.Nom" required>
+            </div>
+            <div class="form-group">
+                <label>Référence</label>
+                <input asp-for="Produit.Reference">
+            </div>
+            <div class="form-group">
+                <label>Catégorie</label>
+                <select asp-for="Produit.CategorieId">
+                    <option value="">— Aucune —</option>
+                    @foreach (var c in Model.Categories)
+                    {
+                        if (Model.Produit.CategorieId == c.Id)
+                        {
+                            <option value="@c.Id" selected>@c.Nom</option>
+                        }
+                        else
+                        {
+                            <option value="@c.Id">@c.Nom</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Prix de vente (€) *</label>
+                <input asp-for="Produit.Prix" type="number" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+                <label>Prix d'achat (€)</label>
+                <input asp-for="Produit.PrixAchat" type="number" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+                <label>Stock minimum (alerte)</label>
+                <input asp-for="Produit.StockMin" type="number" min="0">
+            </div>
+            <div class="form-group">
+                <label>Actif</label>
+                <select asp-for="Produit.Actif">
+                    @if (Model.Produit.Actif)
+                    {
+                        <option value="true" selected>Oui</option>
+                        <option value="false">Non</option>
+                    }
+                    else
+                    {
+                        <option value="true">Oui</option>
+                        <option value="false" selected>Non</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group form-full">
+                <label>URL image</label>
+                <input asp-for="Produit.ImageUrl" type="url">
+            </div>
+            <div class="form-group form-full">
+                <label>Description</label>
+                <textarea asp-for="Produit.Description"></textarea>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">✓ Enregistrer</button>
+            <a href="/Products/Details/@Model.Produit.Id" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>

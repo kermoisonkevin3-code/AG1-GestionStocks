@@ -1,0 +1,152 @@
+@model AG1.Models.Produit
+@{ ViewData["Title"] = "Produit · " + Model.Nom; }
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+    <a href="/Products" class="btn btn-secondary">← Retour</a>
+    <div style="display:flex;gap:8px">
+        @if (User.IsInRole("manager") || User.IsInRole("admin"))
+        {
+        <a href="/Products/Edit/@Model.Id" class="btn btn-secondary">✏ Modifier</a>
+        }
+    </div>
+</div>
+
+<div class="detail-grid">
+    <!-- Info produit -->
+    <div>
+        <div class="card" style="margin-bottom:20px">
+            <div class="card-header">
+                <span class="card-title">@Model.Nom</span>
+                <span class="badge badge-@Model.StatutStock">@Model.StatutStock</span>
+            </div>
+            <div class="card-body" style="padding:20px">
+                <div class="detail-info">
+                    <div class="info-item">
+                        <div class="info-label">Référence</div>
+                        <div class="info-value" style="font-family:'Space Mono',monospace">@(Model.Reference ?? "—")</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Catégorie</div>
+                        <div class="info-value">@(Model.CategorieNom ?? "—")</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Prix de vente</div>
+                        <div class="info-value" style="color:var(--green)">@Model.Prix.ToString("N2") €</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Prix d'achat</div>
+                        <div class="info-value">@Model.PrixAchat.ToString("N2") €</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Marge brute</div>
+                        <div class="info-value" style="color:var(--blue)">
+                            @((Model.Prix - Model.PrixAchat).ToString("N2")) €
+                            (@(Model.Prix > 0 ? ((Model.Prix - Model.PrixAchat) / Model.Prix * 100).ToString("N1") : "0") %)
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Actif</div>
+                        <div class="info-value">
+                            <span class="badge @(Model.Actif ? "badge-ok" : "badge-rupture")">@(Model.Actif ? "Oui" : "Non")</span>
+                        </div>
+                    </div>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                <div style="margin-top:16px;padding:14px;background:var(--bg3);border-radius:var(--radius);color:var(--text-muted)">
+                    @Model.Description
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Mouvements récents -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Historique des mouvements</span>
+            </div>
+            <div class="card-body">
+                @{var mouvements = ViewBag.Mouvements as List<AG1.Models.MouvementStock>;}
+                @if (mouvements == null || !mouvements.Any())
+                {
+                    <p style="padding:20px;text-align:center;color:var(--text-muted)">Aucun mouvement enregistré.</p>
+                }
+                else
+                {
+                <table>
+                    <thead><tr><th>Date</th><th>Type</th><th>Qté</th><th>Motif</th><th>Vendeur</th></tr></thead>
+                    <tbody>
+                    @foreach (var m in mouvements)
+                    {
+                        <tr>
+                            <td style="font-size:0.78rem;color:var(--text-muted)">@m.CreatedAt.ToString("dd/MM/yy HH:mm")</td>
+                            <td>
+                                <span class="badge @(m.Type=="entree"||m.Type=="retour" ? "badge-ok" : "badge-rupture")">@m.Type</span>
+                            </td>
+                            <td style="font-family:'Space Mono',monospace;font-weight:700">
+                                @(m.Type=="entree"||m.Type=="retour" ? "+" : "-")@m.Quantite
+                            </td>
+                            <td style="color:var(--text-muted)">@(m.Motif ?? "—")</td>
+                            <td style="color:var(--text-muted);font-size:0.8rem">@m.VendeurNom</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel stock -->
+    <div>
+        <div class="card" style="margin-bottom:16px">
+            <div class="card-header"><span class="card-title">📦 Stock actuel</span></div>
+            <div class="card-body" style="padding:20px">
+                @{
+                    var pct = Model.StockMin > 0 ? (double)Model.Stock / (Model.StockMin * 2) * 100 : 50;
+                    pct = Math.Min(100, Math.Max(0, pct));
+                    var fillClass = Model.Stock == 0 ? "fill-rupture" : Model.Stock <= Model.StockMin ? "fill-faible" : "fill-ok";
+                }
+                <div style="text-align:center;padding:16px 0">
+                    <div style="font-family:'Space Mono',monospace;font-size:3rem;font-weight:700;color:@(Model.Stock==0?"var(--red)":Model.Stock<=Model.StockMin?"var(--yellow)":"var(--green)")">
+                        @Model.Stock
+                    </div>
+                    <div style="color:var(--text-muted);font-size:0.82rem">unités en stock</div>
+                    <div class="stock-bar" style="margin:12px 0">
+                        <div class="stock-bar-fill @fillClass" style="width:@pct%"></div>
+                    </div>
+                    <div style="font-size:0.78rem;color:var(--text-muted)">Seuil minimum : @Model.StockMin unités</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ajuster stock -->
+        <div class="card">
+            <div class="card-header"><span class="card-title">⚖ Ajuster le stock</span></div>
+            <div class="card-body" style="padding:20px">
+                <form asp-action="AjusterStock" asp-controller="Products" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ProduitId" value="@Model.Id">
+                    <div class="form-group" style="margin-bottom:12px">
+                        <label>Type de mouvement</label>
+                        <select name="Type">
+                            <option value="entree">📥 Entrée (approvisionnement)</option>
+                            <option value="sortie">📤 Sortie (vente manuelle)</option>
+                            <option value="ajustement">⚖ Ajustement (inventaire)</option>
+                            <option value="retour">🔄 Retour client</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px">
+                        <label>Quantité</label>
+                        <input type="number" name="Quantite" min="1" value="1" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:16px">
+                        <label>Motif (optionnel)</label>
+                        <input type="text" name="Motif" placeholder="Livraison fournisseur, correction…">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%">Valider le mouvement</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

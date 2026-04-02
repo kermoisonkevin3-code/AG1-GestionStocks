@@ -1,0 +1,67 @@
+@model List<AG1.Models.Commande>
+@{ ViewData["Title"] = "Commandes"; }
+
+<div class="filters-bar">
+    <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <input type="text" name="search" value="@ViewBag.Search" placeholder="🔍 Client, email…" style="min-width:220px">
+        <select name="statut">
+            <option value="">— Tous statuts —</option>
+            @if (ViewBag.Statut == "en_attente") { <option value="en_attente" selected>En attente</option> } else { <option value="en_attente">En attente</option> }
+            @if (ViewBag.Statut == "confirmee")  { <option value="confirmee"  selected>Confirmée</option>  } else { <option value="confirmee">Confirmée</option>  }
+            @if (ViewBag.Statut == "expediee")   { <option value="expediee"   selected>Expédiée</option>   } else { <option value="expediee">Expédiée</option>   }
+            @if (ViewBag.Statut == "livree")     { <option value="livree"     selected>Livrée</option>     } else { <option value="livree">Livrée</option>     }
+            @if (ViewBag.Statut == "annulee")    { <option value="annulee"    selected>Annulée</option>    } else { <option value="annulee">Annulée</option>    }
+        </select>
+        <button type="submit" class="btn btn-secondary">Filtrer</button>
+        <a href="/Orders" class="btn btn-secondary">Réinitialiser</a>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">@Model.Count commande@(Model.Count > 1 ? "s" : "")</span>
+    </div>
+    <div class="card-body">
+        @if (!Model.Any())
+        {
+            <p style="padding:40px;text-align:center;color:var(--text-muted)">Aucune commande trouvée.</p>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Date</th>
+                        <th>Client</th>
+                        <th>Total</th>
+                        <th>Statut</th>
+                        <th>Traité par</th>
+                        <th>Livraison</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model)
+                    {
+                        <tr>
+                            <td><a href="/Orders/Details/@c.Id" style="color:var(--blue);font-family:'Space Mono',monospace">#@c.Id</a></td>
+                            <td style="font-size:0.8rem;color:var(--text-muted)">@c.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@c.ClientNom</td>
+                            <td style="font-family:'Space Mono',monospace;font-weight:700">@c.Total.ToString("N2") €</td>
+                            <td>
+                                @{ var s = c.Statut.Replace("_", "-"); }
+                                <span class="badge badge-@s">@c.Statut.Replace("_", " ")</span>
+                            </td>
+                            <td style="color:var(--text-muted);font-size:0.8rem">@(c.VendeurNom ?? "—")</td>
+                            <td style="color:var(--text-muted);font-size:0.78rem">
+                                @(c.VilleLivraison ?? "") @(c.CodePostalLivraison ?? "")
+                            </td>
+                            <td><a href="/Orders/Details/@c.Id" class="btn btn-secondary btn-sm">Gérer →</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
